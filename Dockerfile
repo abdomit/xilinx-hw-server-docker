@@ -5,8 +5,7 @@ WORKDIR /xilinx
 
 RUN uname -a
 
-#ARG VIVADO_TAR_FILE="https://xilinx-ax-dl.entitlenow.com/dl/ul/2021/10/24/R210475998/Xilinx_Vivado_Lab_Lin_2021.2_1021_0703.tar.gz?hash=rNexgEuzUaPIfKXKr8mBYQ&expires=1645657031&filename=Xilinx_Vivado_Lab_Lin_2021.2_1021_0703.tar.gz"
-ARG VIVADO_TAR_FILE="Xilinx_Vivado_Lab_Lin_2021.2_1021_0703.tar.gz"
+ARG VIVADO_TAR_FILE="Vivado_Lab_Lin_2023.2_1013_2256.tar.gz"
 
 ADD ${VIVADO_TAR_FILE} /xilinx/
 
@@ -19,7 +18,7 @@ RUN cd $(basename ${VIVADO_TAR_FILE} .tar.gz) && \
 
 FROM ubuntu:20.04
 
-ARG VIVADO_VERSION="2021.2"
+ARG VIVADO_VERSION="2023.2"
 
 RUN mkdir -p /xilinx/bin
 RUN mkdir -p /xilinx/lib

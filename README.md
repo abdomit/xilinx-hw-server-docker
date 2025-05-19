@@ -3,18 +3,16 @@
 This Docker image allows you to run Xilinx's `hw_server` as well as the Xilinx debugger `xsdb` in a Docker container.
 Using QEmu user-space emulation, these tools can also run on embedded devices like a Raspberry Pi or the Ultra-scale boards themself.
 
-- [Blog article with details](https://noteblok.net/2022/02/23/running-a-xilinx-hw_server-as-docker-container/)
+Differences from the original repo:
+* Updated Vivado 2023.2 toolchain
+* Update README.md with up-to-date instructions
 
 ![Setup](./docs/setup.png)
 
-## Tested Vivado versions
+## Tested configuration
 
-- [v2021.2](https://github.com/users/sstaehli/packages/container/hw_server/20585701?tag=2021.2)
-- [v2020.1](https://github.com/users/sstaehli/packages/container/hw_server/20585725?tag=2020.1)
-
-## Tested systems
-
-- Raspberry Pi 4 with 64-bit Raspberry Pi OS (Debian Bullseye)
+- Raspberry Pi 3B+ with 64-bit Raspberry Pi OS (Debian Bookworm)
+- FPGA board Digilent CMOD A7
 
 ## Usage
 
@@ -23,12 +21,11 @@ Using QEmu user-space emulation, these tools can also run on embedded devices li
 ```bash
 docker run \
    --rm \
-   --restart unless-stopped \
    --privileged \
    --volume /dev/bus/usb:/dev/bus/usb \
    --publish 3121:3121 \
    --detach \
-   ghcr.io/stv0g/hw_server:v2021.2
+   ghcr.io/stv0g/hw_server:v2023.2
 ```
 
 ### Docker-compose
@@ -41,32 +38,27 @@ docker-compose up -d
 
 ## Running on non x86_64 systems
 
+Install docker:
+
 ```bash
-# Install docker
 sudo apt-get update && sudo apt-get upgrade
-curl -sSL https://get.docker.com | sh
+sudo apt-get install -y docker-compose
+```
 
-sudo systemctl enable --now docker
+Run hw_server:
 
-# Optional: Install docker-compose (with Python3)
-sudo apt-get install libffi-dev libssl-dev
-sudo apt install python3-dev
-sudo apt-get install -y python3 python3-pip
-‍sudo pip3 install docker-compose
-
+```bash
 # Enable qemu-user emulation support for running amd64 Docker images
 docker run --rm --privileged aptman/qus -s -- -p x86_64
 
 # Run the hw_server with docker
-docker run --rm --restart unless-stopped --privileged --volume /dev/bus/usb:/dev/bus/usb --publish 3121:3121 --detach ghcr.io/sst/hw_server:2021.2
+docker run --restart unless-stopped --privileged --volume /dev/bus/usb:/dev/bus/usb --publish 3121:3121 --detach ghcr.io/sst/hw_server:2023.2
 
 # - OR -
 
 # Run the hw_server with docker-compose (copy the docker-compose.yml to your working dir first)
 docker-compose up -d
 ```
-
-The following steps are not necessary if you use docker-compose.
 
 ### Optional: Enable QEmu userspace emulation at system startup
 
@@ -93,7 +85,7 @@ systemctl enable --now qus
 
 The above steps in conjunction with the docker restart policy will make your `hw_server` container start whenever your system is booted.
 
-If you want to let systemd manage the hw_server you can use also do the following
+If you want to let systemd manage the hw_server you can use also do the following:
 
 ```bash
 cat > /etc/systemd/system/hw_server.service <<EOF
@@ -107,7 +99,7 @@ Type=forking
 PIDFile=/run/hw_server.pid
 TimeoutStartSec=infinity
 Restart=always
-ExecStart=/usr/bin/docker run --rm --name hw_server --privileged  --platform linux/amd64 --volume /dev/bus/usb:/dev/bus/usb --publish 3121:3121 --detach ghcr.io/stv0g/hw_server:v2021.2
+ExecStart=/usr/bin/docker run --rm --name hw_server --privileged  --platform linux/amd64 --volume /dev/bus/usb:/dev/bus/usb --publish 3121:3121 --detach ghcr.io/stv0g/hw_server:v2023.2
 ExecStartPost=/bin/bash -c '/usr/bin/docker inspect -f '{{.State.Pid}}' hw_server | tee /run/hw_server.pid'
 ExecStop=/usr/bin/docker stop hw_server
 
@@ -121,9 +113,11 @@ systemctl enable --now hw_server
 
 ## Building your own image
 
+It is advised to build the docker image on a native x86_64 system, and to send the newly created image on the target device using docker `save` and `load` commands.
+
 1. Download the _Vivado Lab Solutions_ Linux installer to the current directory.
    - **Do not extract it!**
-   - E.g. `Xilinx_Vivado_Lab_Lin_2021.2_1021_0703.tar.gz`
+   - E.g. `Vivado_Lab_Lin_2023.2_1013_2256.tar.gz`
 2. Build the image with the [build.sh](build.sh) script:
 
    ```bash
@@ -132,7 +126,7 @@ systemctl enable --now hw_server
 
 ### Note concerning Accept EULA
 
-Depending on the Vivado version, you have to agree WebTalk (e. g. Version 2020.1) in the [Dockerfile](Dockerfile) or omit it (e. g. Version 2021.2). If this particular line does not match, Vivado installation will fail!
+Depending on the Vivado version, you have to agree WebTalk (e. g. Version 2020.1) in the [Dockerfile](Dockerfile) or omit it (e. g. Version 2023.2). If this particular line does not match, Vivado installation will fail!
 
 #### For 2021.2 and future versions
 
